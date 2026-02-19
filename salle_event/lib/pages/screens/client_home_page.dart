@@ -29,7 +29,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 4.8,
       'capacity': 500,
       'price': 250000,
-      'image': 'assets/salle4.jpg',
+      'image': 'assets/salle de banquet.jpg',
       'tags': ['Climatisation', 'Parking', 'Traiteur'],
     },
     {
@@ -38,7 +38,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 4.5,
       'capacity': 350,
       'price': 200000,
-      'image': 'assets/salle3.jpg',
+      'image': 'assets/salle de conference.jpg',
       'tags': ['Décoration', 'Parking', 'Climatisation'],
     },
     {
@@ -47,7 +47,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 3.9,
       'capacity': 250,
       'price': 180000,
-      'image': 'assets/salle2.jpg',
+      'image': 'assets/salle de banquet.jpg',
       'tags': ['Décoration', 'Parking'],
     },
     {
@@ -56,7 +56,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 4.9,
       'capacity': 300,
       'price': 400000,
-      'image': 'assets/salle1.jpg',
+      'image': 'assets/salle mariage.jpg',
       'tags': ['Décoration', 'Parking','climatisation','traiteur','annimation'],
     },
     {
@@ -65,7 +65,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 3.9,
       'capacity': 500,
       'price': 600000,
-      'image': 'assets/salle6.jpg',
+      'image': 'assets/salle de conference.jpg',
       'tags': ['Décoration', 'Parking','climatisation','securite','annimation'],
     },
     {
@@ -74,7 +74,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       'rating': 4.1,
       'capacity': 600,
       'price': 800000,
-      'image': 'assets/salle5.jpg',
+      'image': 'assets/salle mariage.jpg',
       'tags': ['Décoration', 'Parking'],
     },
   ];

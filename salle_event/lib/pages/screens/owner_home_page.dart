@@ -190,7 +190,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         children: [
           ClipRRect(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: Image.asset("assets/salle1.jpg",
+            child: Image.asset("assets/salle de banquet.jpg",
                 height: 160, width: double.infinity, fit: BoxFit.cover),
           ),
           Padding(
