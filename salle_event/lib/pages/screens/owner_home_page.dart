@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/login.dart';
+import 'add_salle_page.dart';
 
 class OwnerHomePage extends StatefulWidget {
   const OwnerHomePage({super.key});
@@ -69,7 +70,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= STATS =================
 
   Widget _statsSection() {
     return Transform.translate(
@@ -106,8 +106,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       ),
     );
   }
-
-  // ================= TABS =================
 
   Widget _tabs() {
     return Container(
@@ -154,21 +152,50 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
   // ================= ADD SALLE =================
 
   Widget _addSalleButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepPurple,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    child: GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AddSallePage(),
+          ),
+        );
+      },
+      child: Container(
+        height: 55,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color(0xFF6A11CB),
+              Color(0xFF9C27B0),
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(30),
         ),
-        onPressed: () {},
-        child: const Text("+ Ajouter une salle",
-        style: TextStyle(color: Colors.white),), 
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add, color: Colors.white),
+            SizedBox(width: 8),
+            Text(
+              "Ajouter une salle",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   // ================= SALLES =================
 

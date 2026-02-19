@@ -3,7 +3,7 @@ import '../../../../core/colors.dart';
 import '../screens/salle_detail_page.dart';
 import '../screens/reservation_page.dart';
 
-class SalleCard extends StatelessWidget {
+class SalleCard extends StatefulWidget {
   final String name;
   final String city;
   final double rating;
@@ -22,6 +22,12 @@ class SalleCard extends StatelessWidget {
     required this.image,
     required this.tags,
   });
+
+  @override
+  State<SalleCard> createState() => _SalleCardState();
+}
+
+class _SalleCardState extends State<SalleCard> {
 
   @override
   Widget build(BuildContext context) {
@@ -53,9 +59,8 @@ class SalleCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-          
           child: Image.asset(
-            "image/assets/salle6.jpg",
+            widget.image, // ← on utilise maintenant widget.image
             height: 180,
             width: double.infinity,
             fit: BoxFit.cover,
@@ -93,7 +98,7 @@ class SalleCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  name,
+                  widget.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -101,7 +106,7 @@ class SalleCard extends StatelessWidget {
                 ),
               ),
               const Icon(Icons.star, size: 16, color: Colors.orange),
-              Text(rating.toString()),
+              Text(widget.rating.toString()),
             ],
           ),
 
@@ -112,7 +117,7 @@ class SalleCard extends StatelessWidget {
               const Icon(Icons.location_on, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
               Text(
-                city,
+                widget.city,
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
@@ -124,10 +129,11 @@ class SalleCard extends StatelessWidget {
             children: [
               const Icon(Icons.people, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text('$capacity pers.', style: const TextStyle(fontSize: 12)),
+              Text('${widget.capacity} pers.',
+                  style: const TextStyle(fontSize: 12)),
               const Spacer(),
               Text(
-                '$price FCFA',
+                '${widget.price} FCFA',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -140,7 +146,7 @@ class SalleCard extends StatelessWidget {
 
           Wrap(
             spacing: 6,
-            children: tags
+            children: widget.tags
                 .map(
                   (e) => Chip(
                     label: Text(e, style: const TextStyle(fontSize: 11)),
@@ -161,13 +167,13 @@ class SalleCard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => SalleDetailPage(
-                          name: name,
-                          city: city,
-                          rating: rating,
-                          capacity: capacity,
-                          price: price,
-                          image: image,
-                          tags: tags,
+                          name: widget.name,
+                          city: widget.city,
+                          rating: widget.rating,
+                          capacity: widget.capacity,
+                          price: widget.price,
+                          image: widget.image,
+                          tags: widget.tags,
                         ),
                       ),
                     );
@@ -186,9 +192,9 @@ class SalleCard extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => ReservationPage(
-                          name: name,
-                          city: city,
-                          price: price,
+                          name: widget.name,
+                          city: widget.city,
+                          price: widget.price,
                         ),
                       ),
                     );
