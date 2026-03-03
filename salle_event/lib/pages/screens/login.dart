@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/colors.dart';
 import 'account_type_page.dart';
+import 'login_from_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -51,7 +52,7 @@ class LoginPage extends StatelessWidget {
 
             const SizedBox(height: 40),
 
-            _loginButton(),
+            _loginButton(context),
             const SizedBox(height: 15),
             _registerButton(context), 
           ],
@@ -60,7 +61,7 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  Widget _loginButton() {
+  Widget _loginButton(BuildContext context) {
     return SizedBox(
       width: 260,
       height: 45,
@@ -72,8 +73,14 @@ class LoginPage extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
         ),
-        onPressed: () {},
-        child: const Text('Se connecter'),
+        onPressed: () {
+          Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_)=> const LoginFormPage(),
+          )
+        );
+        },
+        child: const Text('Se connecter',),
       ),
     );
   }

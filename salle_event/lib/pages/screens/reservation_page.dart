@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/colors.dart';
+import 'chat_page.dart'; 
 
 class ReservationPage extends StatefulWidget {
   final String name;
@@ -40,7 +41,7 @@ class _ReservationPageState extends State<ReservationPage> {
                   _datePicker(),
                   const SizedBox(height: 20),
                   _paymentMethods(),
-                  const SizedBox(height: 100),
+                  const SizedBox(height: 120),
                 ],
               ),
             ),
@@ -51,7 +52,7 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-
+  // ---------------- HEADER ----------------
   Widget _header(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,14 +70,20 @@ class _ReservationPageState extends State<ReservationPage> {
         const SizedBox(height: 16),
         const Text(
           'Réservation',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        Text(widget.name, style: const TextStyle(color: Colors.grey)),
+        Text(
+          widget.name,
+          style: const TextStyle(color: Colors.grey),
+        ),
       ],
     );
   }
 
-
+  // ---------------- SUMMARY ----------------
   Widget _summaryCard() {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -101,14 +108,18 @@ class _ReservationPageState extends State<ReservationPage> {
         children: [
           Text(title, style: const TextStyle(color: Colors.grey)),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
   }
 
-
+  // ---------------- DATE ----------------
   Widget _datePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +129,8 @@ class _ReservationPageState extends State<ReservationPage> {
         GestureDetector(
           onTap: _pickDate,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -153,7 +165,7 @@ class _ReservationPageState extends State<ReservationPage> {
     }
   }
 
-
+  // ---------------- PAYMENT ----------------
   Widget _paymentMethods() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,6 +190,38 @@ class _ReservationPageState extends State<ReservationPage> {
             style: TextStyle(fontSize: 12),
           ),
         ),
+
+        const SizedBox(height: 16),
+
+        // ✅ BUTTON MESSAGE OWNER
+        OutlinedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatPage(
+                  salleName: widget.name,
+                  ownerName: "Propriétaire",
+                ),
+              ),
+            );
+          },
+          icon: Icon(
+            Icons.chat_bubble_outline,
+            color: AppColors.primary,
+          ),
+          label: Text(
+            "Écrire au propriétaire",
+            style: TextStyle(color: AppColors.primary),
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 48),
+            side: BorderSide(color: AppColors.primary),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -193,13 +237,16 @@ class _ReservationPageState extends State<ReservationPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? AppColors.primary : Colors.grey.shade300,
+            color:
+                selected ? AppColors.primary : Colors.grey.shade300,
           ),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               color: AppColors.primary,
             ),
             const SizedBox(width: 8),
@@ -210,14 +257,14 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  // ---------------- BUTTON ----------------
+  // ---------------- CONFIRM BUTTON ----------------
   Widget _confirmButton() {
     return Positioned(
       left: 16,
       right: 16,
       bottom: 16,
       child: SizedBox(
-        height: 48,
+        height: 50,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
@@ -228,7 +275,10 @@ class _ReservationPageState extends State<ReservationPage> {
           onPressed: () {
             if (selectedDate == null) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Veuillez choisir une date')),
+                const SnackBar(
+                  content:
+                      Text('Veuillez choisir une date'),
+                ),
               );
               return;
             }
