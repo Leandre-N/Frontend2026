@@ -1,7 +1,10 @@
+// client_register_page.dart
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:salle_event/service/auth_service.dart';
 import '../../../../core/colors.dart';
 import 'client_home_page.dart';
-
 
 class ClientRegisterPage extends StatefulWidget {
   const ClientRegisterPage({super.key});
@@ -12,13 +15,68 @@ class ClientRegisterPage extends StatefulWidget {
 
 class _ClientRegisterPageState extends State<ClientRegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  // ─── SOUMISSION ──────────────────────────────────────────────
+
+  Future<void> _soumettre() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.register(
+        nom: nameController.text.trim(),
+        email: emailController.text.trim(),
+        telephone: phoneController.text.trim(),
+        motDePasse: passwordController.text,
+        role: 'CLIENT',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bienvenue ${user.nom} 🎉'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ClientHomePage(fullName: user.nom),
+        ),
+      );
+    } on DioException catch (e) {
+      final message = e.response?.data['message'] ?? 'Erreur inconnue';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ─── BUILD ───────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -27,12 +85,17 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [_header(context), const SizedBox(height: 20), _form()],
+          children: [
+            _header(context),
+            const SizedBox(height: 20),
+            _form(),
+          ],
         ),
       ),
     );
   }
 
+  // ─── HEADER ──────────────────────────────────────────────────
 
   Widget _header(BuildContext context) {
     return Padding(
@@ -49,6 +112,8 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
       ),
     );
   }
+
+  // ─── FORMULAIRE ──────────────────────────────────────────────
 
   Widget _form() {
     return Expanded(
@@ -79,7 +144,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                 controller: nameController,
                 validator: _requiredValidator,
               ),
-
               const SizedBox(height: 15),
 
               _inputField(
@@ -88,7 +152,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                 keyboardType: TextInputType.emailAddress,
                 validator: _emailValidator,
               ),
-
               const SizedBox(height: 15),
 
               _inputField(
@@ -97,7 +160,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                 keyboardType: TextInputType.phone,
                 validator: _requiredValidator,
               ),
-
               const SizedBox(height: 15),
 
               _inputField(
@@ -106,7 +168,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                 obscureText: true,
                 validator: _passwordValidator,
               ),
-
               const SizedBox(height: 15),
 
               _inputField(
@@ -115,11 +176,9 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                 obscureText: true,
                 validator: _confirmPasswordValidator,
               ),
-
               const SizedBox(height: 25),
 
               _registerButton(),
-
               const SizedBox(height: 15),
 
               Center(
@@ -137,6 +196,8 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
       ),
     );
   }
+
+  // ─── INPUT FIELD ─────────────────────────────────────────────
 
   Widget _inputField({
     required String label,
@@ -171,6 +232,8 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     );
   }
 
+  // ─── BOUTON INSCRIPTION ──────────────────────────────────────
+
   Widget _registerButton() {
     return SizedBox(
       width: double.infinity,
@@ -182,22 +245,25 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    ClientHomePage(fullName: nameController.text.trim()),
+        onPressed: _isLoading ? null : _soumettre,
+        child: _isLoading
+            ? const SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                'S\'inscrire',
+                style: TextStyle(color: Colors.white),
               ),
-            );
-          }
-        },
-
-        child: const Text('S’inscrire', style: TextStyle(color: Colors.white)),
       ),
     );
   }
+
+  // ─── VALIDATEURS ─────────────────────────────────────────────
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -207,41 +273,23 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
   }
 
   String? _emailValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Email requis';
-    }
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-      return 'Email invalide';
-    }
+    if (value == null || value.isEmpty) return 'Email requis';
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) return 'Email invalide';
     return null;
   }
 
   String? _passwordValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Mot de passe requis';
-    }
-    if (value.length < 8) {
-      return 'Minimum 8 caractères';
-    }
-    if (!RegExp(r'[A-Z]').hasMatch(value)) {
-      return 'Ajoutez une majuscule';
-    }
-    if (!RegExp(r'[a-z]').hasMatch(value)) {
-      return 'Ajoutez une minuscule';
-    }
-    if (!RegExp(r'\d').hasMatch(value)) {
-      return 'Ajoutez un chiffre';
-    }
+    if (value == null || value.isEmpty) return 'Mot de passe requis';
+    if (value.length < 8) return 'Minimum 8 caractères';
+    if (!RegExp(r'[A-Z]').hasMatch(value)) return 'Ajoutez une majuscule';
+    if (!RegExp(r'[a-z]').hasMatch(value)) return 'Ajoutez une minuscule';
+    if (!RegExp(r'\d').hasMatch(value)) return 'Ajoutez un chiffre';
     return null;
   }
 
   String? _confirmPasswordValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Confirmation requise';
-    }
-    if (value != passwordController.text) {
-      return 'Les mots de passe ne correspondent pas';
-    }
+    if (value == null || value.isEmpty) return 'Confirmation requise';
+    if (value != passwordController.text) return 'Les mots de passe ne correspondent pas';
     return null;
   }
 }

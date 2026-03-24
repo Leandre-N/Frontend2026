@@ -1,8 +1,9 @@
 // api_service.dart
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 class ApiService {
-  // Singleton pour réutiliser la même instance partout
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
 
@@ -11,10 +12,87 @@ class ApiService {
   ApiService._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: "http://192.168.1.136:3000/api", // émulateur Android
-        connectTimeout: Duration(seconds: 10),
-        receiveTimeout: Duration(seconds: 10),
+        baseUrl: "http://10.0.2.2:3000/api",
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 10),
+        headers: {'Content-Type': 'application/json'},
       ),
     );
+
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      error: true,
+    ));
   }
+
+  // ─── GESTION DES ERREURS ─────────────────────────────────────
+
+  Map<String, dynamic> _handleDioError(DioException e) {
+    if (e.response != null) {
+      return {
+        'statusCode': e.response!.statusCode,
+        'body': e.response!.data is Map
+            ? e.response!.data
+            : {'message': e.response!.data.toString()},
+      };
+    } else {
+      return {
+        'statusCode': 500,
+        'body': {'message': 'Impossible de joindre le serveur. Vérifiez votre connexion.'},
+      };
+    }
+  }
+
+  // ─── SALLES ──────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> ajouterSalle({
+  required String nom,
+  required String description,
+  required String ville,
+  required String adresse,
+  required int capacite,
+  required double prix,
+  required String token,
+  File? image, // ← AJOUTER
+}) async {
+  try {
+    // ✅ MultipartFormData pour envoyer image + données
+    final formData = FormData.fromMap({
+      'nom': nom,
+      'description': description,
+      'ville': ville,
+      'adresse': adresse,
+      'capacite': capacite.toString(),
+      'prix': prix.toString(),
+      if (image != null)
+        'image': await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+    });
+
+    final response = await dio.post(
+      '/salles',
+      data: formData,
+      options: Options(
+        headers: {'Authorization': 'Bearer $token'},
+      ),
+    );
+
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
+
+Future<Map<String, dynamic>> getSalles() async {
+  try {
+    final response = await dio.get('/salles');
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
 }

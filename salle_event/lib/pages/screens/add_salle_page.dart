@@ -1,46 +1,170 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:salle_event/service/api_service.dart';
+import 'package:salle_event/service/storage_service.dart';
 
 class AddSallePage extends StatefulWidget {
-  const AddSallePage({Key? key}) : super(key: key);
+  const AddSallePage({super.key});
 
   @override
   State<AddSallePage> createState() => _AddSallePageState();
 }
 
 class _AddSallePageState extends State<AddSallePage> {
+
+  // ================= SERVICES =================
+
+  final ApiService _apiService = ApiService();
+  final StorageService _storage = StorageService();
+  bool _isLoading = false;
+
+  // ================= CONTROLLERS =================
+
+  final nameCtrl = TextEditingController();
+  final descCtrl = TextEditingController();
+  final addressCtrl = TextEditingController();
+  final capacityCtrl = TextEditingController();
+  final priceCtrl = TextEditingController();
+
+  // ================= VARIABLES =================
+
   String selectedVille = "Douala";
   String selectedType = "Mariage";
+  File? image;
+  final ImagePicker picker = ImagePicker();
 
   final List<String> villes = [
-    "Douala",
-    "Yaoundé",
-    "Bafoussam",
-    "Garoua"
+    "Douala", "Yaoundé", "Bafoussam", "Garoua",
   ];
 
   final List<String> types = [
-    "Mariage",
-    "Anniversaire",
-    "Conférence",
-    "Réunion"
+    "Mariage", "Anniversaire", "Conférence", "Réunion",
   ];
 
   final List<String> equipements = [
-    "Climatisation",
-    "Sonorisation",
-    "Éclairage LED",
-    "WiFi",
-    "Parking",
-    "Cuisine équipée",
-    "Projecteur",
-    "Écran géant",
-    "Tables et chaises",
-    "Décoration",
-    "Sécurité",
-    "Jardin",
+    "Climatisation", "Sonorisation", "Éclairage LED", "WiFi",
+    "Parking", "Cuisine équipée", "Projecteur", "Écran géant",
+    "Tables et chaises", "Décoration", "Sécurité", "Jardin",
   ];
 
   final List<String> selectedEquipements = [];
+
+  // ================= DISPOSE =================
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    descCtrl.dispose();
+    addressCtrl.dispose();
+    capacityCtrl.dispose();
+    priceCtrl.dispose();
+    super.dispose();
+  }
+
+  // ================= IMAGE PICKER =================
+
+  Future<void> pickImage() async {
+    final picked = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80, // ✅ compresser un peu l'image
+    );
+    if (picked != null) {
+      setState(() => image = File(picked.path));
+    }
+  }
+
+  // ================= SUBMIT =================
+
+  Future<void> submit() async {
+    // Validation basique
+    if (nameCtrl.text.isEmpty ||
+        priceCtrl.text.isEmpty ||
+        capacityCtrl.text.isEmpty ||
+        addressCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Remplis tous les champs obligatoires"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Validation numérique
+    final prix = double.tryParse(priceCtrl.text);
+    final capacite = int.tryParse(capacityCtrl.text);
+
+    if (prix == null || capacite == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Prix et capacité doivent être des nombres"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Récupérer le token
+    final token = await _storage.getToken();
+    if (token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Session expirée, veuillez vous reconnecter"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final result = await _apiService.ajouterSalle(
+        nom: nameCtrl.text.trim(),
+        description: descCtrl.text.trim(),
+        ville: selectedVille,
+        adresse: addressCtrl.text.trim(),
+        capacite: capacite,
+        prix: prix,
+        token: token,
+        image: image, // ✅ image envoyée au backend
+      );
+
+      if (!mounted) return;
+
+      final statusCode = result['statusCode'];
+      final message = result['body']['message'] ?? 'Erreur inconnue';
+
+      if (statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Salle ajoutée avec succès ✅"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context, result['body']['salle']);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? e.response?.data['message'] ?? 'Erreur inconnue'
+          : 'Erreur inconnue';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
@@ -56,26 +180,24 @@ class _AddSallePageState extends State<AddSallePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+
                     buildLabel("Nom de la salle *"),
-                    buildInputField("Ex: Salle Royale"),
+                    buildInputField("Ex: Salle Royale", controller: nameCtrl),
 
                     buildLabel("Description *"),
                     buildInputField(
                       "Décrivez votre salle...",
+                      controller: descCtrl,
                       maxLines: 4,
                     ),
 
                     buildLabel("Ville *"),
                     buildDropdown(villes, selectedVille, (val) {
-                      setState(() {
-                        selectedVille = val!;
-                      });
+                      setState(() => selectedVille = val!);
                     }),
 
                     buildLabel("Adresse précise *"),
-                    buildInputField(
-                      "Ex: Akwa, Rue de la République",
-                    ),
+                    buildInputField("Ex: Akwa", controller: addressCtrl),
 
                     const SizedBox(height: 10),
 
@@ -86,7 +208,11 @@ class _AddSallePageState extends State<AddSallePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               buildLabel("Capacité *"),
-                              buildInputField("Ex: 500"),
+                              buildInputField(
+                                "Ex: 500",
+                                controller: capacityCtrl,
+                                keyboardType: TextInputType.number,
+                              ),
                             ],
                           ),
                         ),
@@ -96,7 +222,11 @@ class _AddSallePageState extends State<AddSallePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               buildLabel("Prix (FCFA) *"),
-                              buildInputField("Ex: 35000"),
+                              buildInputField(
+                                "Ex: 35000",
+                                controller: priceCtrl,
+                                keyboardType: TextInputType.number,
+                              ),
                             ],
                           ),
                         ),
@@ -105,9 +235,7 @@ class _AddSallePageState extends State<AddSallePage> {
 
                     buildLabel("Type d'événement principal *"),
                     buildDropdown(types, selectedType, (val) {
-                      setState(() {
-                        selectedType = val!;
-                      });
+                      setState(() => selectedType = val!);
                     }),
 
                     buildLabel("Équipements disponibles"),
@@ -115,30 +243,23 @@ class _AddSallePageState extends State<AddSallePage> {
                       spacing: 8,
                       runSpacing: 8,
                       children: equipements.map((e) {
-                        final isSelected =
-                            selectedEquipements.contains(e);
-
+                        final isSelected = selectedEquipements.contains(e);
                         return GestureDetector(
                           onTap: () {
                             setState(() {
-                              if (isSelected) {
-                                selectedEquipements.remove(e);
-                              } else {
-                                selectedEquipements.add(e);
-                              }
+                              isSelected
+                                  ? selectedEquipements.remove(e)
+                                  : selectedEquipements.add(e);
                             });
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
+                                horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? Colors.deepPurple
                                   : Colors.grey.shade200,
-                              borderRadius:
-                                  BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
                               e,
@@ -155,41 +276,34 @@ class _AddSallePageState extends State<AddSallePage> {
                     ),
 
                     buildLabel("Photos de la salle"),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.grey.shade300,
+                    GestureDetector(
+                      onTap: pickImage,
+                      child: Container(
+                        width: double.infinity,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Column(
-                        children: [
-                          Icon(Icons.image,
-                              size: 40,
-                              color: Colors.grey),
-                          SizedBox(height: 10),
-                          Text(
-                            "Ajoutez des photos de votre salle",
-                            style: TextStyle(fontSize: 14),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "Format: JPG, PNG (Max 5 photos)",
-                            style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            "Choisir des photos",
-                            style: TextStyle(
-                              color: Colors.deepPurple,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        ],
+                        child: image == null
+                            ? const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_photo_alternate,
+                                        size: 40, color: Colors.deepPurple),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      "Choisir une photo",
+                                      style: TextStyle(color: Colors.deepPurple),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(image!, fit: BoxFit.cover),
+                              ),
                       ),
                     ),
 
@@ -199,22 +313,26 @@ class _AddSallePageState extends State<AddSallePage> {
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
+                        onPressed: _isLoading ? null : submit,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(30),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                         ),
-                        onPressed: () {},
-                        child: const Text(
-                          "Publier la salle",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                "Publier la salle",
+                                style: TextStyle(color: Colors.white),
+                              ),
                       ),
                     ),
 
@@ -229,27 +347,17 @@ class _AddSallePageState extends State<AddSallePage> {
     );
   }
 
+  // ================= WIDGETS =================
+
   Widget _header(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(
-        top: 20,
-        left: 20,
-        right: 20,
-        bottom: 30,
-      ),
+      padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Color(0xFF6A11CB),
-            Color(0xFF9C27B0),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          colors: [Color(0xFF6A11CB), Color(0xFF9C27B0)],
         ),
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(30),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,35 +366,24 @@ class _AddSallePageState extends State<AddSallePage> {
             onTap: () => Navigator.pop(context),
             child: const Row(
               children: [
-                Icon(Icons.arrow_back_ios,
-                    color: Colors.white, size: 18),
+                Icon(Icons.arrow_back, color: Colors.white),
                 SizedBox(width: 6),
-                Text(
-                  "Retour",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                  ),
-                ),
+                Text("Retour", style: TextStyle(color: Colors.white)),
               ],
             ),
           ),
-          const SizedBox(height: 25),
+          const SizedBox(height: 20),
           const Text(
             "Ajouter une salle",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
+          const Text(
             "Remplissez les informations de votre salle",
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70),
           ),
         ],
       ),
@@ -298,23 +395,25 @@ class _AddSallePageState extends State<AddSallePage> {
       padding: const EdgeInsets.only(top: 15, bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w500),
       ),
     );
   }
 
-  Widget buildInputField(String hint, {int maxLines = 1}) {
+  Widget buildInputField(
+    String hint, {
+    int maxLines = 1,
+    required TextEditingController controller,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
+      controller: controller,
       maxLines: maxLines,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -324,9 +423,10 @@ class _AddSallePageState extends State<AddSallePage> {
   }
 
   Widget buildDropdown(
-      List<String> items,
-      String selected,
-      ValueChanged<String?> onChanged) {
+    List<String> items,
+    String selected,
+    ValueChanged<String?> onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
@@ -337,12 +437,9 @@ class _AddSallePageState extends State<AddSallePage> {
         value: selected,
         isExpanded: true,
         underline: const SizedBox(),
-        items: items.map((e) {
-          return DropdownMenuItem(
-            value: e,
-            child: Text(e),
-          );
-        }).toList(),
+        items: items
+            .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+            .toList(),
         onChanged: onChanged,
       ),
     );

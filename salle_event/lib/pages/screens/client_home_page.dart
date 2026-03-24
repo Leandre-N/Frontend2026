@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../core/colors.dart';
+import '../../service/api_service.dart';
 import '../widgets/filter_bottom_sheet.dart';
-import '../widgets/salle_card.dart';
+import '../widgets/salle_card.dart' hide ApiService;
 import '../screens/my_reservations_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/login.dart';
@@ -20,64 +21,41 @@ class ClientHomePage extends StatefulWidget {
 
 class _ClientHomePageState extends State<ClientHomePage> {
   bool showSearch = true;
+  bool _isLoading = true;
+  List<Map<String, dynamic>> salles = [];
+  String? _error;
 
-  
-  final List<Map<String, dynamic>> salles = [
-    {
-      'name': 'Salle Royale',
-      'city': 'Akwa, Douala',
-      'rating': 4.8,
-      'capacity': 500,
-      'price': 250000,
-      'image': 'assets/salle de banquet.jpg',
-      'tags': ['Climatisation', 'Parking', 'Traiteur'],
-    },
-    {
-      'name': 'Centre des Congrès',
-      'city': 'Bonanjo, Douala',
-      'rating': 4.5,
-      'capacity': 350,
-      'price': 200000,
-      'image': 'assets/salle de conference.jpg',
-      'tags': ['Décoration', 'Parking', 'Climatisation'],
-    },
-    {
-      'name': 'BK Hotel',
-      'city': 'Bonaberi, Douala',
-      'rating': 3.9,
-      'capacity': 250,
-      'price': 180000,
-      'image': 'assets/salle de banquet.jpg',
-      'tags': ['Décoration', 'Parking'],
-    },
-    {
-      'name': 'PLACE SAINT BENOIT',
-      'city': 'Bonaprisp, Douala',
-      'rating': 4.9,
-      'capacity': 300,
-      'price': 400000,
-      'image': 'assets/salle mariage.jpg',
-      'tags': ['Décoration', 'Parking','climatisation','traiteur','annimation'],
-    },
-    {
-      'name': 'SALLE DE FETE ARENA',
-      'city': 'Bali, Douala',
-      'rating': 3.9,
-      'capacity': 500,
-      'price': 600000,
-      'image': 'assets/salle de conference.jpg',
-      'tags': ['Décoration', 'Parking','climatisation','securite','annimation'],
-    },
-    {
-      'name': 'SALLE SAPHIR',
-      'city': 'AKWA, Douala',
-      'rating': 4.1,
-      'capacity': 600,
-      'price': 800000,
-      'image': 'assets/salle mariage.jpg',
-      'tags': ['Décoration', 'Parking'],
-    },
-  ];
+  static const String baseUrl = 'http://10.0.2.2:3000';
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerSalles();
+  }
+
+  // ✅ Charger les salles depuis le backend
+  Future<void> _chargerSalles() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final result = await ApiService().getSalles();
+    final statusCode = result['statusCode'];
+
+    if (statusCode == 200) {
+      final data = result['body'] as List;
+      setState(() {
+        salles = data.map((s) => Map<String, dynamic>.from(s)).toList();
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _error = 'Impossible de charger les salles';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,29 +66,81 @@ class _ClientHomePageState extends State<ClientHomePage> {
         children: [
           if (showSearch) _searchBar(context),
           const SizedBox(height: 6),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: salles.length,
-              itemBuilder: (context, index) {
-                final salle = salles[index];
-                return SalleCard(
-                  name: salle['name'],
-                  city: salle['city'],
-                  rating: salle['rating'],
-                  capacity: salle['capacity'],
-                  price: salle['price'],
-                  image: salle['image'],
-                  tags: List<String>.from(salle['tags']),
-                );
-              },
-            ),
-          ),
+          Expanded(child: _buildBody()),
         ],
       ),
     );
   }
 
+  // ✅ Body selon l'état
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.wifi_off, size: 60, color: Colors.grey),
+            const SizedBox(height: 12),
+            Text(_error!, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _chargerSalles,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+              ),
+              child: const Text(
+                'Réessayer',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (salles.isEmpty) {
+      return const Center(
+        child: Text(
+          'Aucune salle disponible',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _chargerSalles, // ✅ Pull to refresh
+      color: AppColors.primary,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: salles.length,
+        itemBuilder: (context, index) {
+          final salle = salles[index];
+
+          // ✅ Construire l'URL de l'image
+          final imageUrl = salle['image'] != null
+              ? '$baseUrl/${salle['image']}'
+              : null;
+
+          return SalleCard(
+            id: salle['id'],
+            name: salle['nom'] ?? 'Sans nom',
+            city: '${salle['adresse'] ?? ''}, ${salle['ville'] ?? ''}',
+            rating: double.tryParse(salle['rating']?.toString() ?? '0') ?? 0.0,
+            capacity: salle['capacite'] ?? 0,
+            price: (salle['prix'] ?? 0).toInt(),
+            imageUrl: imageUrl,       // ✅ URL réseau
+            tags: const [],           // equipements à connecter plus tard
+          );
+        },
+      ),
+    );
+  }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
@@ -123,10 +153,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         children: [
           const Text(
             'Bonjour,',
-            style: TextStyle(
-              fontSize: 25,
-              color: Colors.white70,
-            ),
+            style: TextStyle(fontSize: 25, color: Colors.white70),
           ),
           Text(
             widget.fullName,
@@ -173,11 +200,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
     );
   }
 
-  PopupMenuItem<String> _menuItem(
-    String value,
-    IconData icon,
-    String text,
-  ) {
+  PopupMenuItem<String> _menuItem(String value, IconData icon, String text) {
     return PopupMenuItem(
       value: value,
       child: Row(
@@ -189,7 +212,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
       ),
     );
   }
-
 
   Widget _searchBar(BuildContext context) {
     return Container(

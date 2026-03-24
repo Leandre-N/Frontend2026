@@ -6,7 +6,6 @@ import 'package:salle_event/service/auth_service.dart';
 import '../../../../core/colors.dart';
 import 'login.dart';
 
-
 class LoginFormPage extends StatefulWidget {
   const LoginFormPage({super.key});
 
@@ -29,26 +28,22 @@ class _LoginFormPageState extends State<LoginFormPage> {
       User user = await _authService.login(emailCtrl.text, passCtrl.text);
       print("Connecté : ${user.nom}, token: ${user.token}");
 
-      // Ici tu peux naviguer vers la page principale
+      // Navigation selon rôle
       if (user.role == "CLIENT") {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ClientHomePage(fullName: user.nom,)),
-
+          MaterialPageRoute(builder: (context) => ClientHomePage(fullName: user.nom)),
         );
-      }
-      else if(user.role == "PROPRIETAIRE") {
+      } else if (user.role == "PROPRIETAIRE") {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => OwnerHomePage()),
-
         );
-        
       }
     } catch (e) {
       print("Erreur login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Email ou mot de passe incorrect")),
+        const SnackBar(content: Text("Email ou mot de passe incorrect")),
       );
     } finally {
       setState(() => isLoading = false);
@@ -59,6 +54,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
+      resizeToAvoidBottomInset: true,
       body: Column(
         children: [
           _header(context),
@@ -70,66 +66,62 @@ class _LoginFormPageState extends State<LoginFormPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
               ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-
-                    _buildField(
-                      label: "Email",
-                      hint: "votre@email.com",
-                      controller: emailCtrl,
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    _buildPasswordField(),
-
-                    const SizedBox(height: 25),
-
-                    isLoading
-                        ? CircularProgressIndicator()
-                        : SizedBox(
-                            width: double.infinity,
-                            height: 50,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildField(
+                        label: "Email",
+                        hint: "votre@email.com",
+                        controller: emailCtrl,
+                      ),
+                      const SizedBox(height: 15),
+                      _buildPasswordField(),
+                      const SizedBox(height: 25),
+                      isLoading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    login();
+                                  }
+                                },
+                                child: const Text(
+                                  "Se connecter",
+                                  style: TextStyle(color: Colors.white),
                                 ),
                               ),
-                              onPressed: () {
-                                if (_formKey.currentState!.validate()) {
-                                  login();
-                                }
-                              },
-                              child: const Text(
-                                "Se connecter",
-                                style: TextStyle(color: Colors.white),
-                              ),
                             ),
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginPage()),
+                          );
+                        },
+                        child: const Text(
+                          "Pas encore de compte ? S’inscrire",
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
                           ),
-
-                    const SizedBox(height: 20),
-
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginPage()),
-                        );
-                      },
-                      child: const Text(
-                        "Pas encore de compte ? S’inscrire",
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20), // padding bottom
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -220,9 +212,7 @@ class _LoginFormPageState extends State<LoginFormPage> {
             filled: true,
             fillColor: Colors.grey.shade100,
             suffixIcon: IconButton(
-              icon: Icon(
-                hidePassword ? Icons.visibility_off : Icons.visibility,
-              ),
+              icon: Icon(hidePassword ? Icons.visibility_off : Icons.visibility),
               onPressed: () {
                 setState(() {
                   hidePassword = !hidePassword;

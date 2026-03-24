@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
+import '../widgets/salle_card.dart';
 import '../../../../core/colors.dart';
 import '../screens/salle_detail_page.dart';
 import '../screens/reservation_page.dart';
 
 class SalleCard extends StatefulWidget {
+  final int id;
   final String name;
   final String city;
   final double rating;
   final int capacity;
   final int price;
-  final String image;
+  final String? imageUrl;   // ✅ URL réseau (nullable)
   final List<String> tags;
 
   const SalleCard({
     super.key,
+    required this.id,
     required this.name,
     required this.city,
     required this.rating,
     required this.capacity,
     required this.price,
-    required this.image,
+    this.imageUrl,
     required this.tags,
   });
 
@@ -28,6 +31,7 @@ class SalleCard extends StatefulWidget {
 }
 
 class _SalleCardState extends State<SalleCard> {
+  bool isFavorite = false;
 
   @override
   Widget build(BuildContext context) {
@@ -59,31 +63,60 @@ class _SalleCardState extends State<SalleCard> {
       children: [
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-          child: Image.asset(
-            widget.image, // ← on utilise maintenant widget.image
-            height: 180,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              height: 180,
-              color: Colors.grey.shade300,
-              child: const Icon(Icons.image_not_supported, size: 40),
-            ),
-          ),
+          child: widget.imageUrl != null
+              ? Image.network(
+                  widget.imageUrl!,
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      height: 180,
+                      color: Colors.grey.shade200,
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    );
+                  },
+                  errorBuilder: (_, __, ___) => _imagePlaceholder(),
+                )
+              : _imagePlaceholder(),
         ),
+        // ✅ Bouton favori
         Positioned(
           top: 10,
           right: 10,
-          child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
+          child: GestureDetector(
+            onTap: () => setState(() => isFavorite = !isFavorite),
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isFavorite ? Icons.favorite : Icons.favorite_border,
+                size: 18,
+                color: isFavorite ? Colors.red : Colors.grey,
+              ),
             ),
-            child: const Icon(Icons.favorite_border, size: 18),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _imagePlaceholder() {
+    return Container(
+      height: 180,
+      width: double.infinity,
+      color: Colors.deepPurple.shade100,
+      child: const Center(
+        child: Icon(Icons.apartment, size: 60, color: Colors.deepPurple),
+      ),
     );
   }
 
@@ -106,7 +139,7 @@ class _SalleCardState extends State<SalleCard> {
                 ),
               ),
               const Icon(Icons.star, size: 16, color: Colors.orange),
-              Text(widget.rating.toString()),
+              Text(widget.rating.toStringAsFixed(1)),
             ],
           ),
 
@@ -116,9 +149,12 @@ class _SalleCardState extends State<SalleCard> {
             children: [
               const Icon(Icons.location_on, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text(
-                widget.city,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+              Expanded(
+                child: Text(
+                  widget.city,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
@@ -129,8 +165,10 @@ class _SalleCardState extends State<SalleCard> {
             children: [
               const Icon(Icons.people, size: 14, color: Colors.grey),
               const SizedBox(width: 4),
-              Text('${widget.capacity} pers.',
-                  style: const TextStyle(fontSize: 12)),
+              Text(
+                '${widget.capacity} pers.',
+                style: const TextStyle(fontSize: 12),
+              ),
               const Spacer(),
               Text(
                 '${widget.price} FCFA',
@@ -144,17 +182,21 @@ class _SalleCardState extends State<SalleCard> {
 
           const SizedBox(height: 8),
 
-          Wrap(
-            spacing: 6,
-            children: widget.tags
-                .map(
-                  (e) => Chip(
-                    label: Text(e, style: const TextStyle(fontSize: 11)),
-                    backgroundColor: Colors.grey.shade100,
-                  ),
-                )
-                .toList(),
-          ),
+          // ✅ Tags
+          if (widget.tags.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              children: widget.tags
+                  .take(3) // max 3 tags affichés
+                  .map(
+                    (e) => Chip(
+                      label: Text(e, style: const TextStyle(fontSize: 11)),
+                      backgroundColor: Colors.grey.shade100,
+                      padding: EdgeInsets.zero,
+                    ),
+                  )
+                  .toList(),
+            ),
 
           const SizedBox(height: 10),
 
@@ -172,7 +214,7 @@ class _SalleCardState extends State<SalleCard> {
                           rating: widget.rating,
                           capacity: widget.capacity,
                           price: widget.price,
-                          image: widget.image,
+                          image: widget.imageUrl ?? '',
                           tags: widget.tags,
                         ),
                       ),

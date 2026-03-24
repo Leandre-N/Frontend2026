@@ -1,4 +1,6 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:salle_event/service/auth_service.dart';
 import '../screens/login.dart';
 import '../screens/owner_home_page.dart';
 
@@ -13,7 +15,9 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
   bool hidePassword = true;
   bool hideConfirmPassword = true;
   bool acceptTerms = false;
+  bool _isLoading = false;
 
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   final nameCtrl = TextEditingController();
@@ -23,6 +27,85 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
   final addressCtrl = TextEditingController();
   final passCtrl = TextEditingController();
   final confirmCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    emailCtrl.dispose();
+    phoneCtrl.dispose();
+    etabCtrl.dispose();
+    addressCtrl.dispose();
+    passCtrl.dispose();
+    confirmCtrl.dispose();
+    super.dispose();
+  }
+
+  // ─── SOUMISSION ──────────────────────────────────────────────
+
+  Future<void> _soumettre() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Veuillez accepter les conditions d'utilisation"),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (passCtrl.text != confirmCtrl.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Les mots de passe ne correspondent pas"),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await _authService.register(
+        nom: nameCtrl.text.trim(),
+        email: emailCtrl.text.trim(),
+        telephone: phoneCtrl.text.trim(),
+        motDePasse: passCtrl.text,
+        role: 'PROPRIETAIRE',
+        // etabCtrl et addressCtrl affichés mais non envoyés au backend
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Bienvenue ${user.nom} 🎉'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const OwnerHomePage()),
+      );
+
+    } on DioException catch (e) {
+      final message = e.response?.data is Map
+          ? e.response?.data['message'] ?? 'Erreur inconnue'
+          : 'Erreur inconnue';
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ─── BUILD ───────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -40,20 +123,22 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
                   child: Column(
                     children: [
                       _field("Nom complet", nameCtrl),
-                      _field("Email", emailCtrl),
-                      _field("Téléphone", phoneCtrl),
+                      _field("Email", emailCtrl,
+                          keyboardType: TextInputType.emailAddress),
+                      _field("Téléphone", phoneCtrl,
+                          keyboardType: TextInputType.phone),
                       _field("Nom de l'établissement", etabCtrl),
                       _field("Adresse", addressCtrl),
                       _passwordField("Mot de passe", passCtrl, true),
                       _passwordField("Confirmer mot de passe", confirmCtrl, false),
 
+                      // ─── CONDITIONS ──────────────────────────
                       Row(
                         children: [
                           Checkbox(
                             value: acceptTerms,
-                            onChanged: (v) {
-                              setState(() => acceptTerms = v!);
-                            },
+                            activeColor: const Color(0xFF8A2BE2),
+                            onChanged: (v) => setState(() => acceptTerms = v!),
                           ),
                           const Expanded(
                             child: Text("J'accepte les conditions d'utilisation"),
@@ -63,6 +148,7 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
 
                       const SizedBox(height: 10),
 
+                      // ─── BOUTON ──────────────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -73,54 +159,30 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () {
-                            if (_formKey.currentState!.validate()) {
-                              if (!acceptTerms) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Acceptez les conditions"),
+                          onPressed: _isLoading ? null : _soumettre,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
                                   ),
-                                );
-                                return;
-                              }
-
-                              if (passCtrl.text != confirmCtrl.text) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                        "Les mots de passe ne correspondent pas"),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              // ✅ REDIRECTION
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const OwnerHomePage(),
+                                )
+                              : const Text(
+                                  "S'inscrire",
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                              );
-                            }
-                          },
-                          child: const Text(
-                            "S'inscrire",
-                            style: TextStyle(color: Colors.white),
-                          ),
                         ),
                       ),
 
                       const SizedBox(height: 14),
 
                       GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LoginPage(),
-                            ),
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        ),
                         child: const Text(
                           "Déjà un compte ? Se connecter",
                           style: TextStyle(color: Colors.deepPurple),
@@ -136,6 +198,8 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
       ),
     );
   }
+
+  // ─── HEADER ──────────────────────────────────────────────────
 
   Widget _header(BuildContext context) {
     return Container(
@@ -176,11 +240,18 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     );
   }
 
-  Widget _field(String hint, TextEditingController ctrl) {
+  // ─── INPUT FIELD ─────────────────────────────────────────────
+
+  Widget _field(
+    String hint,
+    TextEditingController ctrl, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: ctrl,
+        keyboardType: keyboardType,
         validator: (v) => v!.isEmpty ? "Champ requis" : null,
         decoration: InputDecoration(
           hintText: hint,
@@ -194,6 +265,8 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
       ),
     );
   }
+
+  // ─── PASSWORD FIELD ──────────────────────────────────────────
 
   Widget _passwordField(String hint, TextEditingController ctrl, bool main) {
     return Padding(
@@ -210,13 +283,11 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
                   ? Icons.visibility_off
                   : Icons.visibility,
             ),
-            onPressed: () {
-              setState(() {
-                main
-                    ? hidePassword = !hidePassword
-                    : hideConfirmPassword = !hideConfirmPassword;
-              });
-            },
+            onPressed: () => setState(() {
+              main
+                  ? hidePassword = !hidePassword
+                  : hideConfirmPassword = !hideConfirmPassword;
+            }),
           ),
           filled: true,
           fillColor: Colors.white,
