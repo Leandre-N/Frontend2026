@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:salle_event/service/api_service.dart';
 import '../../../../core/colors.dart';
-import '../../service/api_service.dart';
 import '../widgets/filter_bottom_sheet.dart';
-import '../widgets/salle_card.dart' hide ApiService;
+import '../widgets/salle_card.dart';
 import '../screens/my_reservations_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/login.dart';

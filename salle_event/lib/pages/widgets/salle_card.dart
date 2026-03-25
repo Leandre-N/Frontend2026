@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../widgets/salle_card.dart';
 import '../../../../core/colors.dart';
 import '../screens/salle_detail_page.dart';
 import '../screens/reservation_page.dart';

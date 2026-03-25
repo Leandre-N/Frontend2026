@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../screens/login.dart';
 import 'add_salle_page.dart';
 import 'owner_inbox_page.dart';
+import '../../service/api_service.dart';
+import '../../service/storage_service.dart';
 
 class OwnerHomePage extends StatefulWidget {
   const OwnerHomePage({super.key});
@@ -13,6 +15,51 @@ class OwnerHomePage extends StatefulWidget {
 class _OwnerHomePageState extends State<OwnerHomePage> {
   bool showReservations = false;
   List<Map<String, dynamic>> salles = [];
+  bool _isLoading = true;
+  String? _error;
+  int _totalReservations = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerDashboard();
+  }
+
+  Future<void> _chargerDashboard() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    final token = await StorageService().getToken();
+    if (token == null) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+      );
+      return;
+    }
+
+    final result = await ApiService().getOwnerDashboard(token);
+    final statusCode = result['statusCode'];
+
+    if (statusCode == 200) {
+      final body = result['body'];
+      if (!mounted) return;
+      setState(() {
+        salles = List<Map<String, dynamic>>.from(body['salles']);
+        _totalReservations = body['total_reservations'] ?? 0;
+        _isLoading = false;
+      });
+    } else {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Erreur lors du chargement des données';
+        _isLoading = false;
+      });
+    }
+  }
 
   // ✅ URL de base du serveur
   static const String baseUrl = 'http://10.0.2.2:3000';
@@ -28,16 +75,25 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
             _statsSection(),
             _tabs(),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    if (!showReservations) _addSalleButton(),
-                    const SizedBox(height: 12),
-                    showReservations ? _reservationList() : _salleList(),
-                  ],
-                ),
-              ),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator(color: Colors.deepPurple))
+                  : _error != null
+                      ? Center(child: Text(_error!))
+                      : RefreshIndicator(
+                          onRefresh: _chargerDashboard,
+                          color: Colors.deepPurple,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                if (!showReservations) _addSalleButton(),
+                                const SizedBox(height: 12),
+                                showReservations ? _reservationList() : _salleList(),
+                              ],
+                            ),
+                          ),
+                        ),
             ),
           ],
         ),
@@ -86,7 +142,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _statCard("${salles.length}", "Salles", Icons.apartment, null),
-          _statCard("2", "Réservations", Icons.calendar_month, null),
+          _statCard("$_totalReservations", "Réservations", Icons.calendar_month, null),
           _statCard("350k", "Revenus", Icons.trending_up, null),
           _statCard(
             "3",

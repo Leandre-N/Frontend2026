@@ -95,4 +95,26 @@ Future<Map<String, dynamic>> getSalles() async {
     return _handleDioError(e);
   }
 }
+
+Future<Map<String, dynamic>> getSalleById(int id) async {
+  try {
+    final response = await dio.get('/salles/$id');
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
+
+Future<Map<String, dynamic>> getOwnerDashboard(String token) async {
+  try {
+    final response = await dio.get(
+      '/users/dashboard',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
+
 }
