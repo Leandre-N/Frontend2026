@@ -117,4 +117,54 @@ Future<Map<String, dynamic>> getOwnerDashboard(String token) async {
   }
 }
 
+Future<Map<String, dynamic>> modifierSalle({
+  required int id,
+  required String nom,
+  required String description,
+  required String ville,
+  required String adresse,
+  required int capacite,
+  required double prix,
+  required String token,
+  File? image,
+}) async {
+  try {
+    final formData = FormData.fromMap({
+      'nom': nom,
+      'description': description,
+      'ville': ville,
+      'adresse': adresse,
+      'capacite': capacite.toString(),
+      'prix': prix.toString(),
+      if (image != null)
+        'image': await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+    });
+
+    final response = await dio.put(
+      '/salles/$id',
+      data: formData,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
+
+Future<Map<String, dynamic>> supprimerSalle(int id, String token) async {
+  try {
+    final response = await dio.delete(
+      '/salles/$id',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return {'statusCode': response.statusCode, 'body': response.data};
+  } on DioException catch (e) {
+    return _handleDioError(e);
+  }
+}
+
 }

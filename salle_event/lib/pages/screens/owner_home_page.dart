@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/login.dart';
 import 'add_salle_page.dart';
 import 'owner_inbox_page.dart';
+import 'edit_salle_page.dart';
 import '../../service/api_service.dart';
 import '../../service/storage_service.dart';
 
@@ -143,7 +144,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         children: [
           _statCard("${salles.length}", "Salles", Icons.apartment, null),
           _statCard("$_totalReservations", "Réservations", Icons.calendar_month, null),
-          _statCard("350k", "Revenus", Icons.trending_up, null),
+          _statCard("0", "Revenus", Icons.trending_up, null),
           _statCard(
             "3",
             "Messages",
@@ -392,9 +393,97 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
               ],
             ),
           ),
+          const Divider(height: 1, color: Colors.black12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditSallePage(salle: salle),
+                      ),
+                    ).then((updated) {
+                      if (updated == true) {
+                        _chargerDashboard();
+                      }
+                    });
+                  },
+                  icon: const Icon(Icons.edit, size: 16),
+                  label: const Text("Modifier", style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.deepPurple,
+                    side: const BorderSide(color: Colors.deepPurple),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: () => _confirmDelete(salle),
+                  icon: const Icon(Icons.delete, size: 16),
+                  label: const Text("Supprimer", style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  // ================= MODIFICATION & SUPPRESSION =================
+
+  void _confirmDelete(Map<String, dynamic> salle) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Supprimer la salle"),
+        content: Text("Voulez-vous vraiment supprimer la salle '${salle['nom']}' ?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Annuler"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteSalle(salle['id']);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Supprimer", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteSalle(int id) async {
+    setState(() => _isLoading = true);
+    final token = await StorageService().getToken();
+    if (token == null) return;
+    
+    final result = await ApiService().supprimerSalle(id, token);
+    if (result['statusCode'] == 200) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Salle supprimée ✅"), backgroundColor: Colors.green),
+      );
+      _chargerDashboard();
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur lors de la suppression"), backgroundColor: Colors.red),
+      );
+      setState(() => _isLoading = false);
+    }
   }
 
   // ================= PLACEHOLDER IMAGE =================
