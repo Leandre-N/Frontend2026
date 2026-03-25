@@ -40,8 +40,6 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     super.dispose();
   }
 
-  // ─── SOUMISSION ──────────────────────────────────────────────
-
   Future<void> _soumettre() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -74,7 +72,7 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
         telephone: phoneCtrl.text.trim(),
         motDePasse: passCtrl.text,
         role: 'PROPRIETAIRE',
-        // etabCtrl et addressCtrl affichés mais non envoyés au backend
+       
       );
 
       if (!mounted) return;
@@ -105,7 +103,7 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     }
   }
 
-  // ─── BUILD ───────────────────────────────────────────────────
+
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +130,6 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
                       _passwordField("Mot de passe", passCtrl, true),
                       _passwordField("Confirmer mot de passe", confirmCtrl, false),
 
-                      // ─── CONDITIONS ──────────────────────────
                       Row(
                         children: [
                           Checkbox(
@@ -148,7 +145,6 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
 
                       const SizedBox(height: 10),
 
-                      // ─── BOUTON ──────────────────────────────
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -199,7 +195,7 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     );
   }
 
-  // ─── HEADER ──────────────────────────────────────────────────
+
 
   Widget _header(BuildContext context) {
     return Container(
@@ -240,7 +236,6 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     );
   }
 
-  // ─── INPUT FIELD ─────────────────────────────────────────────
 
   Widget _field(
     String hint,
@@ -266,7 +261,6 @@ class _OwnerRegisterPageState extends State<OwnerRegisterPage> {
     );
   }
 
-  // ─── PASSWORD FIELD ──────────────────────────────────────────
 
   Widget _passwordField(String hint, TextEditingController ctrl, bool main) {
     return Padding(

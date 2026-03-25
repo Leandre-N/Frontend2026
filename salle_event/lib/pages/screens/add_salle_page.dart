@@ -14,21 +14,16 @@ class AddSallePage extends StatefulWidget {
 
 class _AddSallePageState extends State<AddSallePage> {
 
-  // ================= SERVICES =================
 
   final ApiService _apiService = ApiService();
   final StorageService _storage = StorageService();
   bool _isLoading = false;
-
-  // ================= CONTROLLERS =================
 
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   final addressCtrl = TextEditingController();
   final capacityCtrl = TextEditingController();
   final priceCtrl = TextEditingController();
-
-  // ================= VARIABLES =================
 
   String selectedVille = "Douala";
   String selectedType = "Mariage";
@@ -51,8 +46,6 @@ class _AddSallePageState extends State<AddSallePage> {
 
   final List<String> selectedEquipements = [];
 
-  // ================= DISPOSE =================
-
   @override
   void dispose() {
     nameCtrl.dispose();
@@ -63,22 +56,20 @@ class _AddSallePageState extends State<AddSallePage> {
     super.dispose();
   }
 
-  // ================= IMAGE PICKER =================
 
   Future<void> pickImage() async {
     final picked = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80, // ✅ compresser un peu l'image
+      imageQuality: 80, 
     );
     if (picked != null) {
       setState(() => image = File(picked.path));
     }
   }
 
-  // ================= SUBMIT =================
 
   Future<void> submit() async {
-    // Validation basique
+
     if (nameCtrl.text.isEmpty ||
         priceCtrl.text.isEmpty ||
         capacityCtrl.text.isEmpty ||
@@ -92,7 +83,6 @@ class _AddSallePageState extends State<AddSallePage> {
       return;
     }
 
-    // Validation numérique
     final prix = double.tryParse(priceCtrl.text);
     final capacite = int.tryParse(capacityCtrl.text);
 
@@ -106,7 +96,6 @@ class _AddSallePageState extends State<AddSallePage> {
       return;
     }
 
-    // Récupérer le token
     final token = await _storage.getToken();
     if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +118,8 @@ class _AddSallePageState extends State<AddSallePage> {
         capacite: capacite,
         prix: prix,
         token: token,
-        image: image, // ✅ image envoyée au backend
+        image: image, 
+        equipements: selectedEquipements, // AJOUTER
       );
 
       if (!mounted) return;
@@ -164,7 +154,7 @@ class _AddSallePageState extends State<AddSallePage> {
     }
   }
 
-  // ================= UI =================
+
 
   @override
   Widget build(BuildContext context) {
@@ -347,7 +337,6 @@ class _AddSallePageState extends State<AddSallePage> {
     );
   }
 
-  // ================= WIDGETS =================
 
   Widget _header(BuildContext context) {
     return Container(

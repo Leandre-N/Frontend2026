@@ -116,7 +116,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
     );
   }
 
-  // ---------------- EVENT DROPDOWN ----------------
   Widget _eventDropdown() {
     return Container(
       margin: const EdgeInsets.only(top: 8),

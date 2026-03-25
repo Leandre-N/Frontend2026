@@ -61,8 +61,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       });
     }
   }
-
-  // ✅ URL de base du serveur
   static const String baseUrl = 'http://10.0.2.2:3000';
 
   @override
@@ -102,7 +100,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= HEADER =================
+
 
   Widget _header() {
     return Container(
@@ -133,8 +131,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       ),
     );
   }
-
-  // ================= STATS =================
 
   Widget _statsSection() {
     return Transform.translate(
@@ -187,8 +183,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= TABS =================
-
   Widget _tabs() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -230,8 +224,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       ),
     );
   }
-
-  // ================= ADD SALLE =================
 
   Widget _addSalleButton() {
     return Padding(
@@ -277,8 +269,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= SALLES =================
-
   Widget _salleList() {
     if (salles.isEmpty) {
       return const Center(
@@ -319,7 +309,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // ✅ Image depuis le serveur ou placeholder
           ClipRRect(
             borderRadius:
                 const BorderRadius.vertical(top: Radius.circular(14)),
@@ -346,7 +335,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
                 : _imagePlaceholder(),
           ),
 
-          // ✅ Nom + Prix
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -364,7 +352,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
             ),
           ),
 
-          // ✅ Ville + Adresse
           Padding(
             padding: const EdgeInsets.only(left: 12, bottom: 8),
             child: Row(
@@ -379,7 +366,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
             ),
           ),
 
-          // ✅ Capacité
           Padding(
             padding: const EdgeInsets.only(left: 12, bottom: 12),
             child: Row(
@@ -439,7 +425,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= MODIFICATION & SUPPRESSION =================
 
   void _confirmDelete(Map<String, dynamic> salle) {
     showDialog(
@@ -486,8 +471,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     }
   }
 
-  // ================= PLACEHOLDER IMAGE =================
-
   Widget _imagePlaceholder() {
     return Container(
       height: 160,
@@ -498,8 +481,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       ),
     );
   }
-
-  // ================= RESERVATIONS =================
 
   Widget _reservationList() {
     return Column(
@@ -563,7 +544,6 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     );
   }
 
-  // ================= LOGOUT =================
 
   void _logout() {
     showDialog(

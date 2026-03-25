@@ -1,4 +1,3 @@
-// auth_service.dart
 
 import 'package:dio/dio.dart';
 import 'package:salle_event/models/user_model.dart';
@@ -8,8 +7,6 @@ import 'storage_service.dart';
 class AuthService {
   final Dio _dio = ApiService().dio;
   final StorageService _storage = StorageService();
-
-  // LOGIN
 
   Future<User> login(String email, String password) async {
     try {
@@ -23,8 +20,7 @@ class AuthService {
       final userData = response.data['user'];
       final token = response.data['token'];
 
-      // Sauvegarde du token dans le téléphone
-      await _storage.saveToken(token);
+      await _storage.saveToken(token);// sauvegarde
 
       final savedToken = await _storage.getToken();
       print("TOKEN SAUVEGARDE DANS LE TELEPHONE : $savedToken");
@@ -35,7 +31,6 @@ class AuthService {
       rethrow;
     }
   }
-  // ─── REGISTER ────────────────────────────────────────────────
 
   Future<User> register({
     required String nom,
@@ -67,8 +62,6 @@ class AuthService {
       rethrow;
     }
   }
-
-  // ─── LOGOUT ──────────────────────────────────────────────────
 
   Future<void> logout() async {
     await _storage.deleteToken();

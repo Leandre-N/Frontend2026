@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:salle_event/service/api_service.dart';
 import '../../../../core/colors.dart';
+import 'package:salle_event/service/api_service.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../widgets/salle_card.dart';
 import '../screens/my_reservations_page.dart';
@@ -30,10 +30,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
   @override
   void initState() {
     super.initState();
-    _chargerSalles();
+    _chargerSalles(); 
   }
 
-  // ✅ Charger les salles depuis le backend
   Future<void> _chargerSalles() async {
     setState(() {
       _isLoading = true;
@@ -72,7 +71,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
     );
   }
 
-  // ✅ Body selon l'état
+
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
@@ -114,7 +113,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _chargerSalles, // ✅ Pull to refresh
+      onRefresh: _chargerSalles, 
       color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -122,7 +121,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
         itemBuilder: (context, index) {
           final salle = salles[index];
 
-          // ✅ Construire l'URL de l'image
           final imageUrl = salle['image'] != null
               ? '$baseUrl/${salle['image']}'
               : null;
@@ -134,8 +132,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
             rating: double.tryParse(salle['rating']?.toString() ?? '0') ?? 0.0,
             capacity: salle['capacite'] ?? 0,
             price: (salle['prix'] ?? 0).toInt(),
-            imageUrl: imageUrl,       // ✅ URL réseau
-            tags: const [],           // equipements à connecter plus tard
+            imageUrl: imageUrl,
+            tags: const [],
           );
         },
       ),

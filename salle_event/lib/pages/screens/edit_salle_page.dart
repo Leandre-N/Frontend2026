@@ -15,13 +15,9 @@ class EditSallePage extends StatefulWidget {
 
 class _EditSallePageState extends State<EditSallePage> {
 
-  // ================= SERVICES =================
-
   final ApiService _apiService = ApiService();
   final StorageService _storage = StorageService();
   bool _isLoading = false;
-
-  // ================= CONTROLLERS =================
 
   final nameCtrl = TextEditingController();
   final descCtrl = TextEditingController();
@@ -29,7 +25,6 @@ class _EditSallePageState extends State<EditSallePage> {
   final capacityCtrl = TextEditingController();
   final priceCtrl = TextEditingController();
 
-  // ================= VARIABLES =================
 
   String selectedVille = "Douala";
   String selectedType = "Mariage";
@@ -52,7 +47,6 @@ class _EditSallePageState extends State<EditSallePage> {
 
   final List<String> selectedEquipements = [];
 
-  // ================= INIT & DISPOSE =================
 
   @override
   void initState() {
@@ -63,9 +57,17 @@ class _EditSallePageState extends State<EditSallePage> {
     capacityCtrl.text = widget.salle['capacite']?.toString() ?? '';
     priceCtrl.text = widget.salle['prix']?.toString() ?? '';
     
-    // Check if ville exists in villes list
     if (villes.contains(widget.salle['ville'])) {
       selectedVille = widget.salle['ville'];
+    }
+
+    // Charger les équipements existants
+    if (widget.salle['equipements'] != null) {
+      for (var eq in widget.salle['equipements']) {
+        if (eq['nom'] != null) {
+          selectedEquipements.add(eq['nom']);
+        }
+      }
     }
   }
 
@@ -79,22 +81,20 @@ class _EditSallePageState extends State<EditSallePage> {
     super.dispose();
   }
 
-  // ================= IMAGE PICKER =================
 
   Future<void> pickImage() async {
     final picked = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 80, // ✅ compresser un peu l'image
+      imageQuality: 80,
     );
     if (picked != null) {
       setState(() => image = File(picked.path));
     }
   }
 
-  // ================= SUBMIT =================
 
   Future<void> submit() async {
-    // Validation basique
+
     if (nameCtrl.text.isEmpty ||
         priceCtrl.text.isEmpty ||
         capacityCtrl.text.isEmpty ||
@@ -108,7 +108,6 @@ class _EditSallePageState extends State<EditSallePage> {
       return;
     }
 
-    // Validation numérique
     final prix = double.tryParse(priceCtrl.text);
     final capacite = int.tryParse(capacityCtrl.text);
 
@@ -122,7 +121,6 @@ class _EditSallePageState extends State<EditSallePage> {
       return;
     }
 
-    // Récupérer le token
     final token = await _storage.getToken();
     if (token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +144,8 @@ class _EditSallePageState extends State<EditSallePage> {
         capacite: capacite,
         prix: prix,
         token: token,
-        image: image, // ✅ image envoyée au backend uniquement si changée
+        image: image,
+        equipements: selectedEquipements, // AJOUTER
       );
 
       if (!mounted) return;
@@ -161,8 +160,7 @@ class _EditSallePageState extends State<EditSallePage> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context, true); // Retourner true pour forcer le rafraîchissement
-      } else {
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
@@ -181,7 +179,6 @@ class _EditSallePageState extends State<EditSallePage> {
     }
   }
 
-  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {

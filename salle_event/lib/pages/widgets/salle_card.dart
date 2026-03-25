@@ -10,7 +10,7 @@ class SalleCard extends StatefulWidget {
   final double rating;
   final int capacity;
   final int price;
-  final String? imageUrl;   // ✅ URL réseau (nullable)
+  final String? imageUrl;
   final List<String> tags;
 
   const SalleCard({
@@ -84,7 +84,6 @@ class _SalleCardState extends State<SalleCard> {
                 )
               : _imagePlaceholder(),
         ),
-        // ✅ Bouton favori
         Positioned(
           top: 10,
           right: 10,
@@ -181,12 +180,11 @@ class _SalleCardState extends State<SalleCard> {
 
           const SizedBox(height: 8),
 
-          // ✅ Tags
           if (widget.tags.isNotEmpty)
             Wrap(
               spacing: 6,
               children: widget.tags
-                  .take(3) // max 3 tags affichés
+                  .take(3)
                   .map(
                     (e) => Chip(
                       label: Text(e, style: const TextStyle(fontSize: 11)),
@@ -204,18 +202,11 @@ class _SalleCardState extends State<SalleCard> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: () {
+                    // ✅ On passe uniquement l'id
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => SalleDetailPage(
-                          name: widget.name,
-                          city: widget.city,
-                          rating: widget.rating,
-                          capacity: widget.capacity,
-                          price: widget.price,
-                          image: widget.imageUrl ?? '',
-                          tags: widget.tags,
-                        ),
+                        builder: (_) => SalleDetailPage(salleId: widget.id),
                       ),
                     );
                   },

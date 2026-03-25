@@ -1,4 +1,4 @@
-// api_service.dart
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -56,6 +56,7 @@ class ApiService {
   required double prix,
   required String token,
   File? image, // ← AJOUTER
+  List<String>? equipements, // AJOUTER
 }) async {
   try {
     // ✅ MultipartFormData pour envoyer image + données
@@ -66,6 +67,8 @@ class ApiService {
       'adresse': adresse,
       'capacite': capacite.toString(),
       'prix': prix.toString(),
+      if (equipements != null)
+        'equipements': jsonEncode(equipements),
       if (image != null)
         'image': await MultipartFile.fromFile(
           image.path,
@@ -127,6 +130,7 @@ Future<Map<String, dynamic>> modifierSalle({
   required double prix,
   required String token,
   File? image,
+  List<String>? equipements, // AJOUTER
 }) async {
   try {
     final formData = FormData.fromMap({
@@ -136,6 +140,8 @@ Future<Map<String, dynamic>> modifierSalle({
       'adresse': adresse,
       'capacite': capacite.toString(),
       'prix': prix.toString(),
+      if (equipements != null)
+        'equipements': jsonEncode(equipements),
       if (image != null)
         'image': await MultipartFile.fromFile(
           image.path,

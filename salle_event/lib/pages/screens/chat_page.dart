@@ -40,7 +40,6 @@ class _ChatPageState extends State<ChatPage> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
 
-      // -------- HEADER --------
       appBar: AppBar(
         backgroundColor: AppColors.primary,
         elevation: 0,
@@ -62,7 +61,6 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
 
-          // -------- MESSAGES --------
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -99,7 +97,6 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
 
-          // -------- INPUT MESSAGE --------
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: 10,

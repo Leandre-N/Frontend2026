@@ -52,7 +52,6 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  // ---------------- HEADER ----------------
   Widget _header(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +82,6 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  // ---------------- SUMMARY ----------------
   Widget _summaryCard() {
     return Container(
       padding: const EdgeInsets.all(14),
@@ -119,7 +117,6 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  // ---------------- DATE ----------------
   Widget _datePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +162,6 @@ class _ReservationPageState extends State<ReservationPage> {
     }
   }
 
-  // ---------------- PAYMENT ----------------
   Widget _paymentMethods() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +189,6 @@ class _ReservationPageState extends State<ReservationPage> {
 
         const SizedBox(height: 16),
 
-        // ✅ BUTTON MESSAGE OWNER
         OutlinedButton.icon(
           onPressed: () {
             Navigator.push(
@@ -257,7 +252,6 @@ class _ReservationPageState extends State<ReservationPage> {
     );
   }
 
-  // ---------------- CONFIRM BUTTON ----------------
   Widget _confirmButton() {
     return Positioned(
       left: 16,

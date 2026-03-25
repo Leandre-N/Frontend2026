@@ -1,4 +1,3 @@
-// client_register_page.dart
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -34,8 +33,7 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     super.dispose();
   }
 
-  // ─── SOUMISSION ──────────────────────────────────────────────
-
+ 
   Future<void> _soumettre() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -76,7 +74,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     }
   }
 
-  // ─── BUILD ───────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -95,8 +92,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     );
   }
 
-  // ─── HEADER ──────────────────────────────────────────────────
-
   Widget _header(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -112,8 +107,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
       ),
     );
   }
-
-  // ─── FORMULAIRE ──────────────────────────────────────────────
 
   Widget _form() {
     return Expanded(
@@ -197,8 +190,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     );
   }
 
-  // ─── INPUT FIELD ─────────────────────────────────────────────
-
   Widget _inputField({
     required String label,
     required TextEditingController controller,
@@ -232,8 +223,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
     );
   }
 
-  // ─── BOUTON INSCRIPTION ──────────────────────────────────────
-
   Widget _registerButton() {
     return SizedBox(
       width: double.infinity,
@@ -262,8 +251,6 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
       ),
     );
   }
-
-  // ─── VALIDATEURS ─────────────────────────────────────────────
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
