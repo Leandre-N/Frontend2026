@@ -249,4 +249,28 @@ Future<Map<String, dynamic>> modifierSalle({
       return _handleDioError(e);
     }
   }
+
+  Future<Map<String, dynamic>> getNotifications(String token) async {
+    try {
+      final response = await dio.get(
+        '/notifications/me',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> markNotificationsAsRead(String token) async {
+    try {
+      final response = await dio.put(
+        '/notifications/mark-as-read',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
 }

@@ -28,16 +28,18 @@ class _LoginFormPageState extends State<LoginFormPage> {
       User user = await _authService.login(emailCtrl.text, passCtrl.text);
       print("Connecté : ${user.nom}, token: ${user.token}");
 
-      // Navigation selon rôle
+      // Navigation selon rôle - Utilisation de pushAndRemoveUntil pour réinitialiser la pile
       if (user.role == "CLIENT") {
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => ClientHomePage(fullName: user.nom)),
+          (route) => false,
         );
       } else if (user.role == "PROPRIETAIRE") {
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => OwnerHomePage()),
+          MaterialPageRoute(builder: (context) => const OwnerHomePage()),
+          (route) => false,
         );
       }
     } catch (e) {

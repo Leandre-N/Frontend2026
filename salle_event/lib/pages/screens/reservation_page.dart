@@ -3,7 +3,6 @@ import '../../../../core/colors.dart';
 import '../../service/api_service.dart';
 import '../../service/storage_service.dart';
 import 'chat_page.dart';
-import 'my_reservations_page.dart';
 
 class ReservationPage extends StatefulWidget {
   final int id; // Added ID to call API
@@ -200,20 +199,17 @@ class _ReservationPageState extends State<ReservationPage> {
   }
 
   Future<void> _pickDate() async {
-    final date = await showDatePicker(
+    showModalBottomSheet(
       context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-      initialDate: DateTime.now(),
-      selectableDayPredicate: (DateTime day) {
-        final dateStr = "${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}";
-        return !blockedDates.contains(dateStr);
-      },
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _CustomCalendarBottomSheet(
+        blockedDates: blockedDates,
+        onDateSelected: (date) {
+          setState(() => selectedDate = date);
+        },
+      ),
     );
-
-    if (date != null) {
-      setState(() => selectedDate = date);
-    }
   }
 
   Widget _paymentMethods() {
@@ -364,6 +360,7 @@ class _ReservationPageState extends State<ReservationPage> {
               backgroundColor: Colors.green,
             ),
           );
+          // Retour à l'accueil (qui est maintenant la racine grâce au pushAndRemoveUntil du login)
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } else {
@@ -420,4 +417,120 @@ class _ReservationPageState extends State<ReservationPage> {
       ),
     );
   }
-}
+}
+
+class _CustomCalendarBottomSheet extends StatefulWidget {
+  final List<String> blockedDates;
+  final Function(DateTime) onDateSelected;
+
+  const _CustomCalendarBottomSheet({
+    required this.blockedDates,
+    required this.onDateSelected,
+  });
+
+  @override
+  State<_CustomCalendarBottomSheet> createState() => _CustomCalendarBottomSheetState();
+}
+
+class _CustomCalendarBottomSheetState extends State<_CustomCalendarBottomSheet> {
+  DateTime _viewDate = DateTime.now();
+
+  @override
+  Widget build(BuildContext context) {
+    final daysInMonth = DateUtils.getDaysInMonth(_viewDate.year, _viewDate.month);
+    final firstDayOfMonth = DateTime(_viewDate.year, _viewDate.month, 1);
+    final firstDayOffset = (firstDayOfMonth.weekday - 1) % 7;
+    
+    final months = ["", "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(topLeft: Radius.circular(25), topRight: Radius.circular(25)),
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("${months[_viewDate.month]} ${_viewDate.year}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  IconButton(icon: const Icon(Icons.chevron_left), onPressed: () => setState(() => _viewDate = DateTime(_viewDate.year, _viewDate.month - 1))),
+                  IconButton(icon: const Icon(Icons.chevron_right), onPressed: () => setState(() => _viewDate = DateTime(_viewDate.year, _viewDate.month + 1))),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: const ["LU", "MA", "ME", "JE", "VE", "SA", "DI"].map((d) => Text(d, style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12))).toList(),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: GridView.builder(
+              itemCount: daysInMonth + firstDayOffset,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7),
+              itemBuilder: (context, index) {
+                if (index < firstDayOffset) return const SizedBox();
+                final day = index - firstDayOffset + 1;
+                final date = DateTime(_viewDate.year, _viewDate.month, day);
+                final dateStr = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                final isBlocked = widget.blockedDates.contains(dateStr);
+                final isPast = date.isBefore(DateTime.now().subtract(const Duration(days: 1)));
+
+                return GestureDetector(
+                  onTap: (isBlocked || isPast) ? null : () {
+                    widget.onDateSelected(date);
+                    Navigator.pop(context);
+                  },
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (isBlocked)
+                        Container(
+                          width: 35,
+                          height: 35,
+                          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.red, width: 2)),
+                        ),
+                      Text(
+                        "$day",
+                        style: TextStyle(
+                          color: isBlocked ? Colors.red : (isPast ? Colors.grey.shade300 : Colors.black),
+                          fontWeight: isBlocked ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          _legend(),
+        ],
+      ),
+    );
+  }
+
+  Widget _legend() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Row(
+        children: [
+          Container(width: 12, height: 12, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.red, width: 2))),
+          const SizedBox(width: 8),
+          const Text("Indisponible", style: TextStyle(fontSize: 12, color: Colors.grey)),
+          const SizedBox(width: 20),
+          Container(width: 12, height: 12, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.transparent)),
+          const SizedBox(width: 8),
+          const Text("Disponible", style: TextStyle(fontSize: 12, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+}

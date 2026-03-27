@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:salle_event/service/storage_service.dart';
 import '../../../../core/colors.dart';
 import 'package:salle_event/service/api_service.dart';
 import '../widgets/filter_bottom_sheet.dart';
@@ -25,6 +26,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
   List<Map<String, dynamic>> _allSalles = [];
   List<Map<String, dynamic>> _filteredSalles = [];
   String? _error;
+  List _notifications = [];
 
   final TextEditingController _searchCtrl = TextEditingController();
 
@@ -34,6 +36,46 @@ class _ClientHomePageState extends State<ClientHomePage> {
   void initState() {
     super.initState();
     _chargerSalles();
+    _checkNotifications();
+  }
+
+  Future<void> _checkNotifications() async {
+    final token = await StorageService().getToken();
+    if (token == null) return;
+
+    final result = await ApiService().getNotifications(token);
+    if (result['statusCode'] == 200) {
+      final notifs = result['body'] as List;
+      final unreadNotifs = notifs.where((n) => n['lu'] == false).toList();
+
+      if (unreadNotifs.isNotEmpty && mounted) {
+        final lastNotif = unreadNotifs.first;
+        ScaffoldMessenger.of(context).showMaterialBanner(
+          MaterialBanner(
+            content: Text(lastNotif['message']),
+            leading: const Icon(Icons.notifications_active, color: Colors.orange),
+            backgroundColor: Colors.white,
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  await ApiService().markNotificationsAsRead(token);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                  }
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      
+      if (mounted) {
+        setState(() {
+          _notifications = notifs;
+        });
+      }
+    }
   }
 
   @override
@@ -138,7 +180,10 @@ class _ClientHomePageState extends State<ClientHomePage> {
     }
 
     return RefreshIndicator(
-      onRefresh: _chargerSalles,
+      onRefresh: () async {
+        await _chargerSalles();
+        await _checkNotifications();
+      },
       color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
