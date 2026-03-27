@@ -22,15 +22,24 @@ class ClientHomePage extends StatefulWidget {
 class _ClientHomePageState extends State<ClientHomePage> {
   bool showSearch = true;
   bool _isLoading = true;
-  List<Map<String, dynamic>> salles = [];
+  List<Map<String, dynamic>> _allSalles = [];
+  List<Map<String, dynamic>> _filteredSalles = [];
   String? _error;
+
+  final TextEditingController _searchCtrl = TextEditingController();
 
   static const String baseUrl = 'http://10.0.2.2:3000';
 
   @override
   void initState() {
     super.initState();
-    _chargerSalles(); 
+    _chargerSalles();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _chargerSalles() async {
@@ -45,7 +54,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
     if (statusCode == 200) {
       final data = result['body'] as List;
       setState(() {
-        salles = data.map((s) => Map<String, dynamic>.from(s)).toList();
+        _allSalles = data.map((s) => Map<String, dynamic>.from(s)).toList();
+        _filteredSalles = List.from(_allSalles);
         _isLoading = false;
       });
     } else {
@@ -54,6 +64,21 @@ class _ClientHomePageState extends State<ClientHomePage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _filterSalles(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredSalles = List.from(_allSalles);
+      } else {
+        final lowercaseQuery = query.toLowerCase();
+        _filteredSalles = _allSalles.where((salle) {
+          final nom = (salle['nom'] ?? '').toString().toLowerCase();
+          final ville = (salle['ville'] ?? '').toString().toLowerCase();
+          return nom.contains(lowercaseQuery) || ville.contains(lowercaseQuery);
+        }).toList();
+      }
+    });
   }
 
   @override
@@ -103,23 +128,23 @@ class _ClientHomePageState extends State<ClientHomePage> {
       );
     }
 
-    if (salles.isEmpty) {
+    if (_filteredSalles.isEmpty) {
       return const Center(
         child: Text(
-          'Aucune salle disponible',
+          'Aucune salle trouvée',
           style: TextStyle(color: Colors.grey),
         ),
       );
     }
 
     return RefreshIndicator(
-      onRefresh: _chargerSalles, 
+      onRefresh: _chargerSalles,
       color: AppColors.primary,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: salles.length,
+        itemCount: _filteredSalles.length,
         itemBuilder: (context, index) {
-          final salle = salles[index];
+          final salle = _filteredSalles[index];
 
           final imageUrl = salle['image'] != null
               ? '$baseUrl/${salle['image']}'
@@ -225,13 +250,15 @@ class _ClientHomePageState extends State<ClientHomePage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.search, color: Colors.grey),
-                  SizedBox(width: 8),
+                  const Icon(Icons.search, color: Colors.grey),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      controller: _searchCtrl,
+                      onChanged: _filterSalles,
+                      decoration: const InputDecoration(
                         hintText: 'Rechercher une salle...',
                         border: InputBorder.none,
                       ),

@@ -161,16 +161,92 @@ Future<Map<String, dynamic>> modifierSalle({
   }
 }
 
-Future<Map<String, dynamic>> supprimerSalle(int id, String token) async {
-  try {
-    final response = await dio.delete(
-      '/salles/$id',
-      options: Options(headers: {'Authorization': 'Bearer $token'}),
-    );
-    return {'statusCode': response.statusCode, 'body': response.data};
-  } on DioException catch (e) {
-    return _handleDioError(e);
+  Future<Map<String, dynamic>> supprimerSalle(int id, String token) async {
+    try {
+      final response = await dio.delete(
+        '/salles/$id',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
   }
-}
 
-}
+  // ─── RESERVATIONS ────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> creerReservation({
+    required int salleId,
+    required String date,
+    required String creneau,
+    required double montantTotal,
+    required String numTel,
+    required String modePaiement,
+    required String token,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/reservations',
+        data: {
+          'salle_id': salleId,
+          'date': date,
+          'creneau': creneau,
+          'montant_total': montantTotal,
+          'num_tel': numTel,
+          'mode_paiement': modePaiement,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getMesReservations(String token) async {
+    try {
+      final response = await dio.get(
+        '/reservations/me',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getProprietaireReservations(String token) async {
+    try {
+      final response = await dio.get(
+        '/reservations/proprietaire',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> updateReservationStatus(
+      int id, String statut, String token) async {
+    try {
+      final response = await dio.put(
+        '/reservations/$id',
+        data: {'statut': statut},
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getBlockedDates(int salleId) async {
+    try {
+      final response = await dio.get('/reservations/blocked-dates/$salleId');
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+}

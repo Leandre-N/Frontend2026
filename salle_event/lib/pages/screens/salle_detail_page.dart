@@ -382,7 +382,7 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
               context,
               MaterialPageRoute(
                 builder: (_) =>
-                    ReservationPage(name: nom, city: ville, price: prix),
+                    ReservationPage(id: widget.salleId, name: nom, city: ville, price: prix),
               ),
             );
           },

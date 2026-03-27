@@ -16,9 +16,11 @@ class OwnerHomePage extends StatefulWidget {
 class _OwnerHomePageState extends State<OwnerHomePage> {
   bool showReservations = false;
   List<Map<String, dynamic>> salles = [];
+  List _reservations = [];
   bool _isLoading = true;
   String? _error;
   int _totalReservations = 0;
+  double _totalRevenue = 0;
 
   @override
   void initState() {
@@ -43,14 +45,17 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
     }
 
     final result = await ApiService().getOwnerDashboard(token);
-    final statusCode = result['statusCode'];
+    final resReservations = await ApiService().getProprietaireReservations(token);
 
-    if (statusCode == 200) {
-      final body = result['body'];
+    if (result['statusCode'] == 200) {
       if (!mounted) return;
       setState(() {
-        salles = List<Map<String, dynamic>>.from(body['salles']);
-        _totalReservations = body['total_reservations'] ?? 0;
+        salles = List<Map<String, dynamic>>.from(result['body']['salles']);
+        _totalReservations = result['body']['total_reservations'] ?? 0;
+        _totalRevenue = (result['body']['revenus_totaux'] ?? 0).toDouble();
+        if (resReservations['statusCode'] == 200) {
+          _reservations = resReservations['body'];
+        }
         _isLoading = false;
       });
     } else {
@@ -140,7 +145,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         children: [
           _statCard("${salles.length}", "Salles", Icons.apartment, null),
           _statCard("$_totalReservations", "Réservations", Icons.calendar_month, null),
-          _statCard("0", "Revenus", Icons.trending_up, null),
+          _statCard("${_totalRevenue.toInt()}", "Revenus", Icons.trending_up, null),
           _statCard(
             "3",
             "Messages",
@@ -483,30 +488,33 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
   }
 
   Widget _reservationList() {
+    if (_reservations.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.only(top: 40),
+          child: Text(
+            "Aucune réservation",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
     return Column(
-      children: [
-        _reservationCard(
-          "Marie Dubois",
-          "+237 677889900",
-          "mercredi 15 janvier 2025",
-          "350000 FCFA",
-          true,
-        ),
-        const SizedBox(height: 12),
-        _reservationCard(
-          "Paul Kamga",
-          "+237 655443322",
-          "lundi 20 janvier 2025",
-          "350000 FCFA",
-          false,
-        ),
-      ],
+      children: _reservations.map((res) => _reservationCard(res)).toList(),
     );
   }
 
-  Widget _reservationCard(
-      String name, String phone, String date, String price, bool pending) {
+  Widget _reservationCard(Map<String, dynamic> res) {
+    final salle = res['salle'] ?? {};
+    final user = res['user'] ?? {};
+    final status = res['statut'];
+    final date = res['date'];
+    final price = res['montant_total'];
+    final phone = res['num_tel'] ?? user['telephone'] ?? 'N/A';
+    final mode = res['mode_paiement'] ?? 'N/A';
+
     return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -521,27 +529,95 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Salle Royale Akwa",
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                salle['nom'] ?? "Salle inconnue",
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text(price, style: const TextStyle(color: Colors.deepPurple)),
+              Text("$price FCFA",
+                  style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(name),
-          Text(phone, style: const TextStyle(color: Colors.grey)),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          Text(user['nom'] ?? 'Client inconnu',
+              style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text("Tel: $phone ($mode)", style: const TextStyle(color: Colors.grey, fontSize: 13)),
+          const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.calendar_month, size: 16),
+              const Icon(Icons.calendar_month, size: 16, color: Colors.grey),
               const SizedBox(width: 6),
-              Text(date),
+              Text(date, style: const TextStyle(fontSize: 13)),
+              const Spacer(),
+              _statusBadge(status),
             ],
           ),
+          if (status == 'EN_ATTENTE') ...[
+            const Divider(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _updateStatus(res['id'], 'ANNULEE'),
+                    style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text("Refuser"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => _updateStatus(res['id'], 'CONFIRMEE'),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    child: const Text("Accepter", style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _statusBadge(String status) {
+    Color color = Colors.grey;
+    String label = status;
+    if (status == 'EN_ATTENTE') {
+      color = Colors.orange;
+      label = "En attente";
+    } else if (status == 'CONFIRMEE') {
+      color = Colors.green;
+      label = "Confirmée";
+    } else if (status == 'ANNULEE') {
+      color = Colors.red;
+      label = "Annulée";
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(label,
+          style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Future<void> _updateStatus(int id, String newStatus) async {
+    setState(() => _isLoading = true);
+    final token = await StorageService().getToken();
+    if (token == null) return;
+
+    final res = await ApiService().updateReservationStatus(id, newStatus, token);
+    if (res['statusCode'] == 200) {
+      _chargerDashboard();
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(res['body']['message'] ?? 'Erreur')),
+        );
+      }
+      setState(() => _isLoading = false);
+    }
   }
 
 

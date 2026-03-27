@@ -224,6 +224,7 @@ class _SalleCardState extends State<SalleCard> {
                       context,
                       MaterialPageRoute(
                         builder: (_) => ReservationPage(
+                          id: widget.id,
                           name: widget.name,
                           city: widget.city,
                           price: widget.price,
