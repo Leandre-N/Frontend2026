@@ -34,13 +34,14 @@ class ReservationDetailPage extends StatelessWidget {
             // Salle Card (simplified or reusable)
             SalleCard(
               id: salle['id'] ?? 0,
+              ownerId: salle['proprietaire_id'] ?? 0, // ✅ AJOUT
               name: salle['nom'] ?? 'Salle inconnue',
               city: salle['ville'] ?? '',
               rating: 0, // Not available here
               capacity: salle['capacite'] ?? 0,
               price: salle['prix'] ?? 0,
               imageUrl: imageUrl,
-              tags: [], // Not available here
+              tags: const [], // Not available here
             ),
             const SizedBox(height: 20),
             

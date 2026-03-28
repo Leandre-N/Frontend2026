@@ -5,6 +5,7 @@ import '../screens/reservation_page.dart';
 
 class SalleCard extends StatefulWidget {
   final int id;
+  final int ownerId; // ✅ AJOUT
   final String name;
   final String city;
   final double rating;
@@ -16,6 +17,7 @@ class SalleCard extends StatefulWidget {
   const SalleCard({
     super.key,
     required this.id,
+    required this.ownerId, // ✅ AJOUT
     required this.name,
     required this.city,
     required this.rating,
@@ -225,6 +227,7 @@ class _SalleCardState extends State<SalleCard> {
                       MaterialPageRoute(
                         builder: (_) => ReservationPage(
                           id: widget.id,
+                          ownerId: widget.ownerId, // ✅ AJOUT
                           name: widget.name,
                           city: widget.city,
                           price: widget.price,

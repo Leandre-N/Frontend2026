@@ -6,6 +6,7 @@ import 'chat_page.dart';
 
 class ReservationPage extends StatefulWidget {
   final int id; // Added ID to call API
+  final int ownerId; // ✅ AJOUT
   final String name;
   final String city;
   final int price;
@@ -13,6 +14,7 @@ class ReservationPage extends StatefulWidget {
   const ReservationPage({
     super.key,
     required this.id,
+    required this.ownerId, // ✅ AJOUT
     required this.name,
     required this.city,
     required this.price,
@@ -240,6 +242,8 @@ class _ReservationPageState extends State<ReservationPage> {
               context,
               MaterialPageRoute(
                 builder: (_) => ChatPage(
+                  salleId: widget.id, // ✅ AJOUT
+                  ownerId: widget.ownerId, // ✅ AJOUT
                   salleName: widget.name,
                   ownerName: "Propriétaire",
                 ),

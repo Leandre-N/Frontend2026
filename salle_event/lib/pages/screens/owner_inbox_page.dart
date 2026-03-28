@@ -49,6 +49,8 @@ class OwnerInboxPage extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (_) => ChatPage(
+              salleId: 0, 
+              ownerId: 0, 
               salleName: salle,
               ownerName: client,
             ),

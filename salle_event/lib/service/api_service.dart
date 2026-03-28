@@ -13,9 +13,9 @@ class ApiService {
     dio = Dio(
       BaseOptions(
         baseUrl: "http://10.0.2.2:3000/api",
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 10),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        sendTimeout: const Duration(seconds: 30),
         headers: {'Content-Type': 'application/json'},
       ),
     );
@@ -266,6 +266,62 @@ Future<Map<String, dynamic>> modifierSalle({
     try {
       final response = await dio.put(
         '/notifications/mark-as-read',
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  // ─── MESSAGERIE ──────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> sendMessage({
+    required int receiverId,
+    required String content,
+    int? salleId,
+    required String token,
+  }) async {
+    try {
+      final response = await dio.post(
+        '/messages',
+        data: {
+          'receiver_id': receiverId,
+          'content': content,
+          'salle_id': salleId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getConversation({
+    required int otherUserId,
+    int? salleId,
+    required String token,
+  }) async {
+    try {
+      final response = await dio.get(
+        '/messages',
+        queryParameters: {
+          'other_user_id': otherUserId,
+          if (salleId != null) 'salle_id': salleId,
+        },
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
+      );
+      return {'statusCode': response.statusCode, 'body': response.data};
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> getInbox(String token) async {
+    try {
+      final response = await dio.get(
+        '/messages/inbox',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return {'statusCode': response.statusCode, 'body': response.data};

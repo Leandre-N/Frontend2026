@@ -20,7 +20,8 @@ class AuthService {
       final userData = response.data['user'];
       final token = response.data['token'];
 
-      await _storage.saveToken(token);// sauvegarde
+      await _storage.saveToken(token);
+      await _storage.saveUserId(userData['id']); // ✅ AJOUT
 
       final savedToken = await _storage.getToken();
       print("TOKEN SAUVEGARDE DANS LE TELEPHONE : $savedToken");

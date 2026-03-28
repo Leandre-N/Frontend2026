@@ -18,6 +18,8 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
   bool _isLoading = true;
   Map<String, dynamic>? salle;
   String? _error;
+  
+  get proprio => null;
 
   @override
   void initState() {
@@ -381,8 +383,13 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) =>
-                    ReservationPage(id: widget.salleId, name: nom, city: ville, price: prix),
+                builder: (_) => ReservationPage(
+                  id: widget.salleId,
+                  ownerId: proprio?['id'] ?? 0, // ✅ AJOUT
+                  name: nom,
+                  city: ville,
+                  price: prix,
+                ),
               ),
             );
           },

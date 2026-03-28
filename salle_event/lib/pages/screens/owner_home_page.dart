@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../screens/login.dart';
 import 'add_salle_page.dart';
-import 'owner_inbox_page.dart';
+import 'inbox_page.dart'; // ✅ REMPLACÉ
 import 'edit_salle_page.dart';
 import '../../service/api_service.dart';
 import '../../service/storage_service.dart';
@@ -21,6 +21,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
   String? _error;
   int _totalReservations = 0;
   double _totalRevenue = 0;
+  int _totalMessages = 0; // ✅ AJOUT
 
   @override
   void initState() {
@@ -53,6 +54,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
         salles = List<Map<String, dynamic>>.from(result['body']['salles']);
         _totalReservations = result['body']['total_reservations'] ?? 0;
         _totalRevenue = (result['body']['revenus_totaux'] ?? 0).toDouble();
+        _totalMessages = result['body']['total_messages'] ?? 0; // ✅ AJOUT
         if (resReservations['statusCode'] == 200) {
           _reservations = resReservations['body'];
         }
@@ -147,13 +149,13 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
           _statCard("$_totalReservations", "Réservations", Icons.calendar_month, null),
           _statCard("${_totalRevenue.toInt()}", "Revenus", Icons.trending_up, null),
           _statCard(
-            "3",
+            "$_totalMessages",
             "Messages",
             Icons.message_outlined,
             () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const OwnerInboxPage()),
+                MaterialPageRoute(builder: (_) => const InboxPage()), // ✅ REMPLACÉ
               );
             },
           ),

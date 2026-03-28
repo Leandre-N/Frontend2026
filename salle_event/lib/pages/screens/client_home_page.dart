@@ -7,6 +7,7 @@ import '../widgets/salle_card.dart';
 import '../screens/my_reservations_page.dart';
 import '../screens/favorites_page.dart';
 import '../screens/login.dart';
+import '../screens/inbox_page.dart'; // ✅ AJOUT
 
 class ClientHomePage extends StatefulWidget {
   final String fullName;
@@ -197,6 +198,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
           return SalleCard(
             id: salle['id'],
+            ownerId: salle['proprietaire_id'], // ✅ AJOUT
             name: salle['nom'] ?? 'Sans nom',
             city: '${salle['adresse'] ?? ''}, ${salle['ville'] ?? ''}',
             rating: double.tryParse(salle['rating']?.toString() ?? '0') ?? 0.0,
@@ -259,6 +261,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
           },
           itemBuilder: (context) => [
             _menuItem('search', Icons.search, 'Recherche'),
+            _menuItem('messages', Icons.message, 'Mes messages'), // ✅ AJOUT
             _menuItem('reservations', Icons.calendar_month, 'Mes réservations'),
             _menuItem('favorites', Icons.favorite_border, 'Favoris (0)'),
             _menuItem('logout', Icons.logout, 'Déconnexion'),
