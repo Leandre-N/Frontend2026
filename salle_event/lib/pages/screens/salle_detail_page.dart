@@ -13,7 +13,7 @@ class SalleDetailPage extends StatefulWidget {
 }
 
 class _SalleDetailPageState extends State<SalleDetailPage> {
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  static const String baseUrl = ApiService.baseUrl;
 
   bool _isLoading = true;
   Map<String, dynamic>? salle;

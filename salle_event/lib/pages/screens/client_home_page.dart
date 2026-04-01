@@ -31,7 +31,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
   final TextEditingController _searchCtrl = TextEditingController();
 
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  static const String baseUrl = ApiService.baseUrl;
 
   @override
   void initState() {

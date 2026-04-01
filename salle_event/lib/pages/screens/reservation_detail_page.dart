@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:salle_event/service/api_service.dart';
 import '../widgets/salle_card.dart';
 
 class ReservationDetailPage extends StatelessWidget {
@@ -14,7 +15,7 @@ class ReservationDetailPage extends StatelessWidget {
     final montant = reservation['montant_total'];
     
     // Base URL for images
-    const String baseUrl = 'http://10.0.2.2:3000';
+    const String baseUrl = ApiService.baseUrl;
     final imageUrl = salle['image'] != null ? '$baseUrl/${salle['image']}' : null;
 
     return Scaffold(

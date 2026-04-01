@@ -68,7 +68,7 @@ class _OwnerHomePageState extends State<OwnerHomePage> {
       });
     }
   }
-  static const String baseUrl = 'http://10.0.2.2:3000';
+  static const String baseUrl = ApiService.baseUrl;
 
   @override
   Widget build(BuildContext context) {
