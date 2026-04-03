@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:salle_event/service/api_service.dart';
 import '../../../../core/colors.dart';
 import '../screens/reservation_page.dart';
+import '../screens/chat_page.dart';
 
 class SalleDetailPage extends StatefulWidget {
   final int salleId;
@@ -19,7 +20,7 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
   Map<String, dynamic>? salle;
   String? _error;
   
-  get proprio => null;
+  Map<String, dynamic>? _proprio;
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
     if (result['statusCode'] == 200) {
       setState(() {
         salle = Map<String, dynamic>.from(result['body']);
+        _proprio = salle!['user'] as Map<String, dynamic>?;
         _isLoading = false;
       });
     } else {
@@ -122,7 +124,7 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
                     propTel: propTel,
                     equipements: equipements,
                   ),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 130),
                 ],
               ),
             ),
@@ -131,6 +133,7 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
               nom: nom,
               ville: '$adresse, $ville',
               prix: prix,
+              ownerId: _proprio?['id'] ?? 0,
             ),
           ],
         ),
@@ -365,39 +368,80 @@ class _SalleDetailPageState extends State<SalleDetailPage> {
     required String nom,
     required String ville,
     required int prix,
+    required int ownerId,
   }) {
     return Positioned(
       left: 16,
       right: 16,
       bottom: 16,
-      child: SizedBox(
-        height: 48,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => ReservationPage(
-                  id: widget.salleId,
-                  ownerId: proprio?['id'] ?? 0, // ✅ AJOUT
-                  name: nom,
-                  city: ville,
-                  price: prix,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Bouton Écrire au propriétaire
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatPage(
+                      salleId: widget.salleId,
+                      ownerId: ownerId,
+                      salleName: nom,
+                      ownerName: _proprio?['nom'] ?? 'Propriétaire',
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(Icons.chat_bubble_outline, color: AppColors.primary),
+              label: const Text(
+                'Écrire au propriétaire',
+                style: TextStyle(color: AppColors.primary),
+              ),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                side: BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-            );
-          },
-          child: const Text(
-            'Réserver maintenant',
-            style: TextStyle(color: Colors.white),
+            ),
           ),
-        ),
+          const SizedBox(height: 10),
+          // Bouton Réserver maintenant
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ReservationPage(
+                      id: widget.salleId,
+                      ownerId: ownerId,
+                      name: nom,
+                      city: ville,
+                      price: prix,
+                    ),
+                  ),
+                );
+              },
+              child: const Text(
+                'Réserver maintenant',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

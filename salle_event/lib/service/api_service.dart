@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 class ApiService {
-  static const String serverIp = '192.168.1.135';
+  static const String serverIp = '10.0.2.2';
   static const String baseUrl = 'http://$serverIp:3000';
   static const String apiUrl = '$baseUrl/api';
 
@@ -333,4 +333,4 @@ Future<Map<String, dynamic>> modifierSalle({
       return _handleDioError(e);
     }
   }
-}
+}
